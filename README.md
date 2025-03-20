@@ -207,13 +207,33 @@ reachability-metadata.json
 
 4. Rebuild the native image 
 
-```sh
-native-image -cp target/helloworld-1.0-SNAPSHOT.jar:META-INF/native-image/reachability-metadata.json com.oracle.graalvm.AppWithReflexion helloworld2
-```
 
+
+
+```sh
+native-image --emit build-report --no-fallback -cp target/helloworld-1.0-SNAPSHOT.jar -H:ConfigurationFileDirectories=META-INF/native-image com.oracle.graalvm.AppWithReflexion helloword3
+```
+in the logs you can see `83` methods registered for reflection instead of 82 in the previous build 
+
+```java
+[2/8] Performing analysis...  [******]                                                                   (2,4s @ 0,30GB)
+    2 013 reachable types   (56,7% of    3 552 total)
+    1 777 reachable fields  (37,4% of    4 746 total)
+    8 593 reachable methods (34,3% of   25 046 total)
+      706 types,     5 fields, and    83 methods registered for reflection
+       49 types,    34 fields, and    48 methods registered for JNI access
+        4 native libraries: -framework Foundation, dl, pthread, z
+[3/8] Building universe...
+ ```
 
 5. ReRun the application 
 By default the native image process will lookup configuraiton in META-INF/native-image/
+
+```sh
+❯ ./helloword3 com.oracle.graalvm.Greeter sayHello Brice
+Hello Brice!
+```
+
 
 
 #### With Reachability Meta Data

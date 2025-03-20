@@ -24,10 +24,6 @@ public class AppWithReflexion
 {
     public static void main(String[] args) throws  Exception{
 
-       /* String className="com.oracle.graalvm.Greeter";
-        String methodName ="sayHello";*/
-
-
          String className = args[0];
          String methodName = args[1];
          String input = args[2];
