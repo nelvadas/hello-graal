@@ -124,5 +124,96 @@ $ ./helloworld
 Hello World!
 ```
 
+## Handling Reflexion 
+
+Build the JAR and run the AppWithReflection class.
+It depends on `Greeter.sayHello` ( Reflexion) to greet guests using the provided name as a parameter.
+
+```sh
+java -cp target/helloworld-1.0-SNAPSHOT.jar com.oracle.graalvm.AppWithReflexion com.oracle.graalvm.Greeter sayHello Marc
+Hello Marc!
+
+```
+
+### Naive Native image 
+Build the native Binary  using :
+```sh
+native-image -cp target/*.jar  com.oracle.graalvm.AppWithReflexion helloworld2
+```
+
+Run the helloworld2 script with the previous parameters
+
+```sh
+❯ ./helloworld2  com.oracle.graalvm.Greeter sayHello Marc
+
+Exception in thread "main" java.lang.ClassNotFoundException: com.oracle.graalvm.Greeter
+	at org.graalvm.nativeimage.builder/com.oracle.svm.core.hub.ClassForNameSupport.forName(ClassForNameSupport.java:215)
+	at org.graalvm.nativeimage.builder/com.oracle.svm.core.hub.ClassForNameSupport.forName(ClassForNameSupport.java:183)
+	at java.base@24/java.lang.Class.forName(DynamicHub.java:1509)
+	at java.base@24/java.lang.Class.forName(DynamicHub.java:1468)
+	at java.base@24/java.lang.Class.forName(DynamicHub.java:1461)
+	at com.oracle.graalvm.AppWithReflexion.main(AppWithReflexion.java:36)
+	at java.base@24/java.lang.invoke.LambdaForm$DMH/sa346b79c.invokeStaticInit(LambdaForm$DMH)
+  ```
+
+You have a ClassNotFoundException
 
 
+### Fixing the Relfexion 
+
+#### With Native Image tracing Agent 
+
+1. Create a  `META-INF/native-image` directory
+
+```sh 
+ mkdir -p META-INF/native-image
+ ```
+ 
+2. Run the application with the GraalVM Tracing Agent as follow
+
+```sh
+java  -agentlib:native-image-agent=config-output-dir=META-INF/native-image -cp target/helloworld-1.0-SNAPSHOT.jar com.oracle.graalvm.AppWithReflexion com.oracle.graalvm.Greeter sayHello Marc
+Hello Marc!
+```
+
+The execution also create a configuration file `reachability-metadata.json`
+
+```sh
+hello-graal on  main [!?] is 📦 v1.0-SNAPSHOT via ☕ v24 on ☁️  (us-east-2)
+❯ ls META-INF/native-image
+reachability-metadata.json
+``` 
+
+3. Explore the configuration 
+
+```sh
+❯ cat reachability-metadata.json
+{
+  "reflection": [
+    {
+      "type": "com.oracle.graalvm.Greeter",
+      "methods": [
+        {
+          "name": "sayHello",
+          "parameterTypes": [
+            "java.lang.String"
+          ]ETA-INF/native-image
+        }
+      ]
+    }
+  ]
+}
+```
+
+4. Rebuild the native image 
+
+```sh
+native-image -cp target/helloworld-1.0-SNAPSHOT.jar:META-INF/native-image/reachability-metadata.json com.oracle.graalvm.AppWithReflexion helloworld2
+```
+
+
+5. ReRun the application 
+By default the native image process will lookup configuraiton in META-INF/native-image/
+
+
+#### With Reachability Meta Data

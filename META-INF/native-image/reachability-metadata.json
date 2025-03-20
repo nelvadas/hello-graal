@@ -1,0 +1,15 @@
+{
+  "reflection": [
+    {
+      "type": "com.oracle.graalvm.Greeter",
+      "methods": [
+        {
+          "name": "sayHello",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    }
+  ]
+}
